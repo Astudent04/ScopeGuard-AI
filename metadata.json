@@ -1,0 +1,6 @@
+{
+  "name": "ScopeGuard AI",
+  "description": "Scope creep detection and negotiation tool for freelancers to analyze client requests against agreed SOWs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
