@@ -1,3 +1,4 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import React, { useState } from 'react';
 import { 
   ShieldAlert, 
@@ -89,22 +90,38 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
     setIsLoading(true);
     setCustomHours(null);
 
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sow: sowText,
-          message: messageText,
-          hourlyRate,
-        }),
-      });
+    // ✅ ISKO PASTE KAREIN:
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}`);
-      }
+      const prompt = `
+        You are an expert freelance scope creep analyzer. 
+        Analyze the following Scope of Work (SOW) and client message:
+        - SOW: ${sowText}
+        - Client Message: ${messageText}
+        - Hourly Rate: $${hourlyRate}
 
-      const data: AnalysisResult = await response.json();
+        Return a VALID JSON object (and NOTHING else) matching this exact structure:
+        {
+          "verdict": "IN_SCOPE",
+          "scopeCreepScore": 45,
+          "summary": "Short explanation of the scope status",
+          "impactAnalysis": {
+            "additionalHours": 5,
+            "financialImpact": 250,
+            "deliveryImpact": "Will delay initial milestone by 2 days."
+          },
+          "emailTemplate": "Professional reply email to the client"
+        }
+        Note for verdict: MUST be one of "IN_SCOPE", "OUT_OF_SCOPE", or "AMBIGUOUS".
+      `;
+
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      
+      const cleanedJson = responseText.replace(/```json|```/g, '').trim();
+      const data: AnalysisResult = JSON.parse(cleanedJson);
       data.sowSnippet = sowText;
       data.messageSnippet = messageText;
 
