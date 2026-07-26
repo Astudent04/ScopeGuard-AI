@@ -1,15 +1,5 @@
-import express from "express";
-import path from "path";
-import dotenv from "dotenv";
-import { GoogleGenAI, Type } from "@google/genai";
-import { createServer as createViteServer } from "vite";
-
-dotenv.config();
-
-const app = express();
-const PORT = 3000;
-
-app.use(express.json());
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { GoogleGenAI, Type } from '@google/genai';
 
 // Initialize Gemini API client
 const ai = new GoogleGenAI({
@@ -27,7 +17,12 @@ interface AnalysisPayload {
   hourlyRate?: number;
 }
 
-app.post("/api/analyze", async (req, res) => {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
   const { sow, message, hourlyRate } = req.body as AnalysisPayload;
 
   if (!sow || !message) {
@@ -150,7 +145,6 @@ Analyze and return JSON matching the schema:
       if (response.text) {
         const raw = JSON.parse(response.text);
         
-        // Normalize snake_case and camelCase fields
         const rawResp = raw.responses || {};
         const politeUpsell = rawResp.politeUpsell || rawResp.upsell || {
           subject: "Re: Update on requested additions for project",
@@ -186,7 +180,7 @@ Analyze and return JSON matching the schema:
           },
         };
 
-        return res.json(normalizedResult);
+        return res.status(200).json(normalizedResult);
       }
     }
   } catch (err) {
@@ -195,14 +189,13 @@ Analyze and return JSON matching the schema:
 
   // Fallback local smart analysis
   const fallback = performLocalAnalysis(sow, message, rate);
-  return res.json(fallback);
-});
+  return res.status(200).json(fallback);
+}
 
 function performLocalAnalysis(sow: string, message: string, rate: number) {
   const lowerSow = sow.toLowerCase();
   const lowerMsg = message.toLowerCase();
 
-  // Out of scope trigger words
   const outKeywords = [
     "custom", "ecommerce", "shop", "cart", "payment", "cms", "database",
     "animation", "3d", "extra page", "rebrand", "redesign", "illustration",
@@ -210,7 +203,6 @@ function performLocalAnalysis(sow: string, message: string, rate: number) {
     "translation", "multi-language", "portal"
   ];
 
-  // Gray area words
   const grayKeywords = [
     "tweak", "minor change", "adjust", "font", "color", "re-order", "alignment",
     "slightly different", "feedback", "small update", "polish"
@@ -355,26 +347,3 @@ function performLocalAnalysis(sow: string, message: string, rate: number) {
     };
   }
 }
-
-async function startServer() {
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`ScopeGuard AI server running on http://0.0.0.0:${PORT}`);
-  });
-}
-
-startServer();
