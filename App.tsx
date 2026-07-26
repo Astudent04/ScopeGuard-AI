@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ScopeAnalyzer } from './components/ScopeAnalyzer';
-import { SowVault } from './components/SowVault';
 import { AuditHistory } from './components/AuditHistory';
 import { ToastContainer, ToastMessage } from './components/Toast';
-import { AnalysisResult, AuditLog, SowTemplate } from './types';
+import { AnalysisResult, AuditLog } from './types';
 import { DEFAULT_SOW_TEMPLATES } from './data/presetDemos';
 
-const STORAGE_KEY_TEMPLATES = 'scopeguard_templates_v1';
 const STORAGE_KEY_LOGS = 'scopeguard_audit_logs_v1';
-const [selectedTemplateText, setSelectedTemplateText] = useState<string>('');
 
 // Sample initial audit logs if local storage is empty
 const INITIAL_SAMPLE_LOGS: AuditLog[] = [
@@ -53,20 +50,9 @@ const INITIAL_SAMPLE_LOGS: AuditLog[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'analyzer' | 'vault' | 'history'>('analyzer');
+  const [activeTab, setActiveTab] = useState<'analyzer' | 'history'>('analyzer');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [activeResult, setActiveResult] = useState<AnalysisResult | null>(null);
-
-  // Load Templates from localStorage
-  const [templates, setTemplates] = useState<SowTemplate[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_TEMPLATES);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error('Failed to load templates from localStorage:', e);
-    }
-    return DEFAULT_SOW_TEMPLATES;
-  });
 
   // Load Audit Logs from localStorage
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
@@ -78,15 +64,6 @@ export default function App() {
     }
     return INITIAL_SAMPLE_LOGS;
   });
-
-  // Save Templates to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(templates));
-    } catch (e) {
-      console.error('Failed to save templates:', e);
-    }
-  }, [templates]);
 
   // Save Audit Logs to localStorage
   useEffect(() => {
@@ -105,28 +82,6 @@ export default function App() {
 
   const dismissToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  // Add new template to SOW Vault
- // Use template in Scope Analyzer
-  const handleUseTemplate = (template: SowTemplate) => {
-    setSelectedTemplateText(template.content); 
-    setActiveTab('analyzer');
-    addToast('Template Transferred', `Loaded "${template.name}" into Scope Analyzer.`, 'success');
-  };
-    setTemplates((prev) => [created, ...prev]);
-  };
-
-  // Delete template from SOW Vault
-  const handleDeleteTemplate = (id: string) => {
-    setTemplates((prev) => prev.filter((t) => t.id !== id));
-    addToast('Template Deleted', 'Removed from SOW Vault.', 'info');
-  };
-
-  // Use template in Scope Analyzer
-  const handleUseTemplate = (template: SowTemplate) => {
-    setActiveTab('analyzer');
-    addToast('Template Transferred', `Loaded "${template.name}" into Scope Analyzer.`, 'success');
   };
 
   // On Analysis Complete (Auto-log to Audit History)
@@ -174,29 +129,17 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         auditCount={auditLogs.length}
-        templateCount={templates.length}
       />
 
       {/* Main Content Area */}
-      {activeTab === 'analyzer' && (
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {activeTab === 'analyzer' && (
           <ScopeAnalyzer
-            templates={templates}
+            templates={DEFAULT_SOW_TEMPLATES}
             onAnalysisComplete={handleAnalysisComplete}
             addToast={addToast}
             activeResult={activeResult}
             setActiveResult={setActiveResult}
-            initialSowText={selectedTemplateText} // 👈 Naya prop pass karein
-          />
-        )}
-      
-
-        {activeTab === 'vault' && (
-          <SowVault
-            templates={templates}
-            onAddTemplate={handleAddTemplate}
-            onDeleteTemplate={handleDeleteTemplate}
-            onUseTemplate={handleUseTemplate}
-            addToast={addToast}
           />
         )}
 
@@ -210,7 +153,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Simple Footer */}
+      {/* Footer */}
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
         <p>ScopeGuard AI — Empowering freelancers to detect & negotiate scope creep with confidence.</p>
       </footer>
