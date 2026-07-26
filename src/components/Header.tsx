@@ -1,23 +1,21 @@
 import React from 'react';
-import { ShieldCheck, Search, FolderKanban, History } from 'lucide-react';
+import { ShieldCheck, Search, History } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'analyzer' | 'vault' | 'history';
-  setActiveTab: (tab: 'analyzer' | 'vault' | 'history') => void;
+  activeTab: 'analyzer' | 'history';
+  setActiveTab: (tab: 'analyzer' | 'history') => void;
   auditCount: number;
-  templateCount: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
   auditCount,
-  templateCount,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 px-4 sm:px-6 py-3 transition-all">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
-        {/* Brand Logo & Sleek Status Pill */}
+        {/* Brand Logo & Status Pill */}
         <div className="flex items-center justify-between w-full md:w-auto">
           <div
             className="flex items-center gap-3 cursor-pointer group"
@@ -38,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Sleek Status Pill: glowing green dot with "System Ready" */}
+          {/* Status Pill: Glowing green dot with "System Ready" */}
           <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-full text-xs font-medium text-slate-300 shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -48,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Tab Navigation - Segmented Control */}
+        {/* Tab Navigation - Segmented Control (Analyzer & History Only) */}
         <nav className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800/80 w-full md:w-auto justify-center sm:justify-start shadow-inner">
           <button
             onClick={() => setActiveTab('analyzer')}
@@ -60,23 +58,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Search className="w-4 h-4" />
             <span>Scope Analyzer</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('vault')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer ${
-              activeTab === 'vault'
-                ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700/80'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
-            }`}
-          >
-            <FolderKanban className="w-4 h-4" />
-            <span>SOW Vault</span>
-            {templateCount > 0 && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-slate-950 text-slate-300 border border-slate-800">
-                {templateCount}
-              </span>
-            )}
           </button>
 
           <button
@@ -100,4 +81,3 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-
