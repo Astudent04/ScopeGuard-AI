@@ -2,8 +2,8 @@ import React from 'react';
 import { ShieldCheck, Search, FolderKanban, History } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'analyzer' | 'vault' | 'history';
-  setActiveTab: (tab: 'analyzer' | 'vault' | 'history') => void;
+  activeTab: 'analyzer' | 'history';
+  setActiveTab: (tab: 'analyzer' | 'history') => void;
   auditCount: number;
   templateCount: number;
 }
