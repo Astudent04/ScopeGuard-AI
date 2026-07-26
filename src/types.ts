@@ -27,15 +27,6 @@ export interface AnalysisResult {
   messageSnippet?: string;
 }
 
-export interface SowTemplate {
-  id: string;
-  name: string;
-  category: 'Web Design' | 'Branding' | 'Software Dev' | 'Marketing & SEO' | 'Copywriting' | 'Other';
-  deliverables: string;
-  createdAt: string;
-  isDefault?: boolean;
-}
-
 export interface AuditLog {
   id: string;
   timestamp: string;
