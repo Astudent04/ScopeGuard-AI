@@ -4,7 +4,6 @@ import { ScopeAnalyzer } from './components/ScopeAnalyzer';
 import { AuditHistory } from './components/AuditHistory';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { AnalysisResult, AuditLog } from './types';
-import { DEFAULT_SOW_TEMPLATES } from './data/presetDemos';
 
 const STORAGE_KEY_LOGS = 'scopeguard_audit_logs_v1';
 
@@ -135,7 +134,6 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {activeTab === 'analyzer' && (
           <ScopeAnalyzer
-            templates={DEFAULT_SOW_TEMPLATES}
             onAnalysisComplete={handleAnalysisComplete}
             addToast={addToast}
             activeResult={activeResult}
