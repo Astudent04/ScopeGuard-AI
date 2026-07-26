@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import React, { useState } from 'react';
 import { 
   ShieldAlert, 
@@ -10,7 +10,6 @@ import {
   DollarSign, 
   Clock, 
   ArrowRight, 
-  FileText, 
   RotateCcw, 
   Send,
   Zap,
@@ -90,10 +89,13 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
     setIsLoading(true);
     setCustomHours(null);
 
-    // ✅ ISKO PASTE KAREIN:
+    try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      if (!apiKey) {
+        throw new Error("VITE_GEMINI_API_KEY is missing in environment variables.");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
 
       const prompt = `
         You are an expert freelance scope creep analyzer. 
@@ -102,26 +104,45 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
         - Client Message: ${messageText}
         - Hourly Rate: $${hourlyRate}
 
-        Return a VALID JSON object (and NOTHING else) matching this exact structure:
+        Return a VALID JSON object (and NOTHING else) matching this exact JSON schema structure:
         {
-          "verdict": "IN_SCOPE",
-          "scopeCreepScore": 45,
-          "summary": "Short explanation of the scope status",
-          "impactAnalysis": {
-            "additionalHours": 5,
-            "financialImpact": 250,
-            "deliveryImpact": "Will delay initial milestone by 2 days."
+          "verdict": "OUT_OF_SCOPE",
+          "confidenceScore": 92,
+          "reasoningSummary": "Short explanation of the scope status",
+          "estimatedExtraHours": 5,
+          "suggestedFee": 425,
+          "deliverableMatch": {
+            "explicitlyCovered": ["Item 1"],
+            "outOfBounds": ["Item 2"]
           },
-          "emailTemplate": "Professional reply email to the client"
+          "riskFactors": ["Risk 1", "Risk 2"],
+          "responses": {
+            "politeUpsell": {
+              "subject": "Update regarding additional features",
+              "body": "Friendly email text proposing add-on quote"
+            },
+            "alternativeOffer": {
+              "subject": "Alternative solutions for requested feature",
+              "body": "Email text offering alternative compromise"
+            },
+            "phase2Deferral": {
+              "subject": "Project scope & Phase 2 roadmap",
+              "body": "Email deferring requested features to Phase 2"
+            }
+          }
         }
-        Note for verdict: MUST be one of "IN_SCOPE", "OUT_OF_SCOPE", or "AMBIGUOUS".
+        Note for verdict: MUST be one of "IN_SCOPE", "OUT_OF_SCOPE", or "GRAY_AREA". Do not include Markdown formatting or code blocks in output.
       `;
 
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
-      
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      const responseText = response.text || '';
       const cleanedJson = responseText.replace(/```json|```/g, '').trim();
       const data: AnalysisResult = JSON.parse(cleanedJson);
+
       data.sowSnippet = sowText;
       data.messageSnippet = messageText;
 
@@ -135,7 +156,7 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
       }, 100);
     } catch (err: any) {
       console.error('Error analyzing scope:', err);
-      addToast('Analysis Error', 'Could not complete scan. Please try again.', 'error');
+      addToast('Analysis Error', 'Could not complete scan. Please verify VITE_GEMINI_API_KEY.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -190,7 +211,7 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 py-6 font-sans">
-      {/* Compact Quick Start Presets Bar */}
+      {/* Quick Start Presets Bar */}
       <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-xl p-3.5 sm:p-4 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
@@ -232,9 +253,9 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
         </div>
       </div>
 
-      {/* Main Two Side-by-Side Input Cards */}
+      {/* Main Inputs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Card A: Agreed Scope of Work */}
+        {/* Card A: SOW */}
         <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between space-y-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -245,7 +266,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                 <span>Agreed Scope of Work (SOW)</span>
               </label>
 
-              {/* Saved Templates Dropdown */}
               {templates.length > 0 && (
                 <div className="relative">
                   <select
@@ -283,7 +303,7 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
           </div>
         </div>
 
-        {/* Card B: Client Request / Message */}
+        {/* Card B: Client Request */}
         <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between space-y-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -318,9 +338,8 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
         </div>
       </div>
 
-      {/* Hourly Rate & Prominent Action CTA */}
+      {/* Hourly Rate & Action CTA */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Hourly Rate Input */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400">
             <DollarSign className="w-5 h-5" />
@@ -342,7 +361,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
           </div>
         </div>
 
-        {/* Analyze CTA Button */}
         <button
           onClick={handleAnalyze}
           disabled={isLoading || !sowText.trim() || !messageText.trim()}
@@ -367,30 +385,22 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
         </button>
       </div>
 
-      {/* Loading Scanning Skeleton Card */}
+      {/* Loading Skeleton */}
       {isLoading && (
         <div className="bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-8 shadow-2xl space-y-6 animate-pulse text-center">
           <div className="flex items-center justify-center gap-3 text-emerald-400">
             <Cpu className="w-8 h-8 animate-bounce" />
             <span className="text-lg font-extrabold tracking-wide">AI Guard Analysis in Progress...</span>
           </div>
-
           <p className="text-xs text-slate-400 max-w-md mx-auto">
             Cross-referencing requested deliverables against agreed SOW exclusions, estimating additional effort hours, and generating negotiation responses.
           </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 h-20 animate-pulse" />
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 h-20 animate-pulse" />
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 h-20 animate-pulse" />
-          </div>
         </div>
       )}
 
-      {/* Output Section (Displayed after analysis) */}
+      {/* Output Section */}
       {!isLoading && activeResult && (
         <div id="analysis-result-section" className="space-y-6 animate-fade-in pt-2">
-          {/* Verdict Banner & Grid Stats Bar */}
           {(() => {
             const badge = getVerdictBadge(activeResult.verdict);
             const BadgeIcon = badge.icon;
@@ -415,9 +425,7 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                   </div>
                 </div>
 
-                {/* Grid Displaying 3 Key Metrics */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Metric 1: Verdict */}
                   <div className="bg-slate-950/90 p-4 rounded-xl border border-slate-800/90 flex items-center justify-between">
                     <div>
                       <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Scope Status</span>
@@ -428,7 +436,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                     </div>
                   </div>
 
-                  {/* Metric 2: Extra Time */}
                   <div className="bg-slate-950/90 p-4 rounded-xl border border-slate-800/90 flex items-center justify-between">
                     <div>
                       <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Estimated Extra Effort</span>
@@ -442,7 +449,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                     </div>
                   </div>
 
-                  {/* Metric 3: Suggested Fee */}
                   <div className="bg-slate-950/90 p-4 rounded-xl border border-slate-800/90 flex items-center justify-between">
                     <div>
                       <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Suggested Add-On Fee</span>
@@ -457,9 +463,8 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
             );
           })()}
 
-          {/* Reasoning & Deliverables Breakdown Grid */}
+          {/* Reasoning & Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* AI Analysis Summary */}
             <div className="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-xl">
               <div>
                 <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
@@ -471,9 +476,7 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                 </p>
               </div>
 
-              {/* Deliverable Match breakdown */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Explicitly Covered */}
                 <div className="bg-slate-950/80 border border-emerald-900/40 rounded-xl p-4 space-y-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4" />
@@ -493,7 +496,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                   </ul>
                 </div>
 
-                {/* Out of Bounds */}
                 <div className="bg-slate-950/80 border border-rose-900/40 rounded-xl p-4 space-y-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
                     <ShieldAlert className="w-4 h-4" />
@@ -515,7 +517,7 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
               </div>
             </div>
 
-            {/* Fee Calculator & Risk Factors Card */}
+            {/* Fee Adjuster */}
             <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-xl flex flex-col justify-between">
               <div className="space-y-4">
                 <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
@@ -523,7 +525,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                   <span>Fee Adjuster & Risk Profile</span>
                 </h3>
 
-                {/* Adjust Hours Slider */}
                 <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-3">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400 font-medium">Estimated Extra Hours</span>
@@ -545,7 +546,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                   </div>
                 </div>
 
-                {/* Risk Factors List */}
                 <div className="space-y-2">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
                     Key Risk Factors
@@ -566,7 +566,7 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
             </div>
           </div>
 
-          {/* Response Copy Box: 3 Tabbed Email Negotiation Templates */}
+          {/* Email Templates Tabs */}
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
               <div>
@@ -579,7 +579,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                 </p>
               </div>
 
-              {/* 3 Strategy Selector Tabs */}
               <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
                 <button
                   onClick={() => setActiveResponseTab('politeUpsell')}
@@ -616,7 +615,6 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
               </div>
             </div>
 
-            {/* Response Card Body */}
             {(() => {
               const currentOption = activeResult.responses[activeResponseTab];
               const isCopied = copiedTab === activeResponseTab;
@@ -626,13 +624,13 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
                     <div>
                       <span className="text-xs font-mono text-slate-400">Subject:</span>
-                      <h4 className="text-sm font-semibold text-slate-100 mt-0.5">{currentOption.subject}</h4>
+                      <h4 className="text-sm font-semibold text-slate-100 mt-0.5">{currentOption?.subject}</h4>
                     </div>
 
                     <button
                       onClick={() =>
                         handleCopyResponse(
-                          `Subject: ${currentOption.subject}\n\n${currentOption.body}`,
+                          `Subject: ${currentOption?.subject}\n\n${currentOption?.body}`,
                           activeResponseTab
                         )
                       }
@@ -656,21 +654,10 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
                     </button>
                   </div>
 
-                  {/* Body Display */}
                   <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800/80">
                     <pre className="font-sans text-xs text-slate-200 whitespace-pre-wrap leading-relaxed">
-                      {currentOption.body}
+                      {currentOption?.body}
                     </pre>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-                    <span>
-                      Strategy Goal:{' '}
-                      {activeResponseTab === 'politeUpsell' && 'Accepts extra work with an explicit add-on change order fee.'}
-                      {activeResponseTab === 'alternativeOffer' && 'Suggests swapping another SOW task to stay within original budget.'}
-                      {activeResponseTab === 'phase2Deferral' && 'Locks current milestone launch date and defers extra request to Phase 2.'}
-                    </span>
-                    <span className="text-emerald-400 font-semibold">Ready to Send</span>
                   </div>
                 </div>
               );
@@ -681,4 +668,3 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
     </div>
   );
 };
-
