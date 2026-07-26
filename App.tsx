@@ -9,6 +9,7 @@ import { DEFAULT_SOW_TEMPLATES } from './data/presetDemos';
 
 const STORAGE_KEY_TEMPLATES = 'scopeguard_templates_v1';
 const STORAGE_KEY_LOGS = 'scopeguard_audit_logs_v1';
+const [selectedTemplateText, setSelectedTemplateText] = useState<string>('');
 
 // Sample initial audit logs if local storage is empty
 const INITIAL_SAMPLE_LOGS: AuditLog[] = [
@@ -107,13 +108,12 @@ export default function App() {
   };
 
   // Add new template to SOW Vault
-  const handleAddTemplate = (newTpl: Omit<SowTemplate, 'id' | 'createdAt'>) => {
-    const created: SowTemplate = {
-      ...newTpl,
-      id: `tpl-${Date.now()}`,
-      createdAt: new Date().toISOString().split('T')[0],
-      isDefault: false,
-    };
+ // Use template in Scope Analyzer
+  const handleUseTemplate = (template: SowTemplate) => {
+    setSelectedTemplateText(template.content); 
+    setActiveTab('analyzer');
+    addToast('Template Transferred', `Loaded "${template.name}" into Scope Analyzer.`, 'success');
+  };
     setTemplates((prev) => [created, ...prev]);
   };
 
@@ -178,16 +178,17 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="pb-16">
-        {activeTab === 'analyzer' && (
+      {activeTab === 'analyzer' && (
           <ScopeAnalyzer
             templates={templates}
             onAnalysisComplete={handleAnalysisComplete}
             addToast={addToast}
             activeResult={activeResult}
             setActiveResult={setActiveResult}
+            initialSowText={selectedTemplateText} // 👈 Naya prop pass karein
           />
         )}
+      
 
         {activeTab === 'vault' && (
           <SowVault
