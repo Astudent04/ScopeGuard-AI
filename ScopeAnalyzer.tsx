@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldAlert, 
   ShieldCheck, 
@@ -26,6 +26,7 @@ interface ScopeAnalyzerProps {
   addToast: (title: string, message?: string, type?: 'success' | 'error' | 'info') => void;
   activeResult: AnalysisResult | null;
   setActiveResult: (res: AnalysisResult | null) => void;
+  initialSowText?: string;
 }
 
 export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
@@ -34,14 +35,22 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
   addToast,
   activeResult,
   setActiveResult,
+  initialSowText = '',
 }) => {
-  const [sowText, setSowText] = useState('');
+  const [sowText, setSowText] = useState(initialSowText);
   const [messageText, setMessageText] = useState('');
   const [hourlyRate, setHourlyRate] = useState<number>(85);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeResponseTab, setActiveResponseTab] = useState<'politeUpsell' | 'alternativeOffer' | 'phase2Deferral'>('politeUpsell');
   const [copiedTab, setCopiedTab] = useState<string | null>(null);
+
+  // Sync sowText when loaded externally (e.g. from Vault)
+  useEffect(() => {
+    if (initialSowText) {
+      setSowText(initialSowText);
+    }
+  }, [initialSowText]);
 
   // Live fee adjustments
   const [customHours, setCustomHours] = useState<number | null>(null);
