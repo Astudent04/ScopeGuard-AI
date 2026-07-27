@@ -664,4 +664,3 @@ export const ScopeAnalyzer: React.FC<ScopeAnalyzerProps> = ({
     </div>
   );
 };
-
