@@ -5,7 +5,7 @@
 
 ## Live Application & Repository
 
-* **Live Deployed Web App:** [https://scope-guard-ai.vercel.app](https://scope-guard-ai-9l1y-vd52hz1ns-ariba-projects.vercel.app/)
+* **Live Deployed Web App:** [[https://scope-guard-ai.vercel.app](https://scope-guard-ai-9l1y-vd52hz1ns-ariba-projects.vercel.app/)](https://scope-guard-ai-9l1y-vd52hz1ns-ariba-projects.vercel.app/)
 * **GitHub Repository:** https://github.com/Astudent04/ScopeGuard-AI
 
 ---
