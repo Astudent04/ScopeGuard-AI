@@ -83,16 +83,23 @@ Return JSON schema:
 
 ## Application Screenshots
 
-### **1. Contract & Request Input:**
-![Dashboard Input Interface](https://github.com/user-attachments/assets/00000000-0000-0000-0000-000000000001)
+### **1. Scope Analyzer Dashboard (Main Interface)**
+<img width="1354" height="638" alt="g1" src="https://github.com/user-attachments/assets/28585f3f-0988-4365-9550-939cd02792ac" />
 
-### **2. Verdict & Impact Analysis:**
-![Scope Verdict Breakdown](https://github.com/user-attachments/assets/00000000-0000-0000-0000-000000000002)
+### **2. AI Verdict Analysis Result**
 
-### **3. Generated Negotiation Emails & Audit History:**
-![Email Response Generator](https://github.com/user-attachments/assets/00000000-0000-0000-0000-000000000003)
+<img width="1353" height="639" alt="ray" src="https://github.com/user-attachments/assets/2a125025-96c5-45b4-b5df-d10ce24f6ec4" />
+<img width="1347" height="634" alt="ray2" src="https://github.com/user-attachments/assets/1774f5ef-1f86-4d7d-9cce-76798dccd4f1" />
+
+
+### **3. Audit History & Verification Logs**
+
+<img width="1346" height="638" alt="out" src="https://github.com/user-attachments/assets/d6c4ab1d-3f2b-42b9-93c1-408cab3f5cea" />
+<img width="1350" height="636" alt="grayy" src="https://github.com/user-attachments/assets/662baf04-f438-4a3d-90cb-2155ed1de05e" />
+<img width="1351" height="600" alt="n " src="https://github.com/user-attachments/assets/7bd49230-8032-4aa4-9464-c2879c48db82" />
 
 ---
+
 
 ## How to Run Locally
 
@@ -115,4 +122,4 @@ Return JSON schema:
 
 * **Developer:** Ariba Kashif
 * **Project:** ScopeGuard AI
-* **License:** MIT License
+
